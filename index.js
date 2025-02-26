@@ -25,13 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Configuración de cors para acceder a las cookies desde el frontend
-app.use(
-  cors({
-    origin: process.env.FRONTEND_DOMAIN,
-    methods: "GET,POST,PUT,DELETE",
-    credentials: true,
-  })
-);
+app.use(cors());
 
 // Utilizar rutas desde los controladores
 app.use("/api", userRoutes);
