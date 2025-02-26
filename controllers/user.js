@@ -237,15 +237,18 @@ const profile = async (req, res) => {
       .populate("user")
       .sort("-createdAt");
 
+    const myFollowings = await Follow.find({ user: req.user.id });
+
     return res.status(200).json({
       status: "success",
       message: "Bienvenido al perfil",
-      user: req.user,
       userSelected: user,
       following: followingCount,
       followers: followersCount,
       publicationsCount,
       publicationsList,
+      user: req.user,
+      myFollowings,
     });
   } catch (error) {
     return res.status(404).json({
