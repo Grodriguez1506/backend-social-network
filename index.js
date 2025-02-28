@@ -32,6 +32,8 @@ app.use(
   })
 );
 
+console.log(`Frontend URL ${process.env.FRONTEND_DOMAIN}`);
+
 // Utilizar rutas desde los controladores
 app.use("/api", userRoutes);
 app.use("/api", followRoutes);
