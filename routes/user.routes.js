@@ -27,6 +27,8 @@ router.post("/user/register", UserController.register);
 
 router.post("/user/login", UserController.login);
 
+router.post("/user/refresh", UserController.refresh);
+
 router.put("/user/update", auth, UserController.update);
 
 router.post(

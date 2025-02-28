@@ -3,7 +3,12 @@ import Follow from "../models/Follow.js";
 import Publication from "../models/Publication.js";
 import bcrypt from "bcrypt";
 import "dotenv/config";
-import createAccesToken from "../services/jwt.js";
+import {
+  createAccesToken,
+  createRefreshToken,
+  createNewAccesToken,
+} from "../services/jwt.js";
+import jwt from "jsonwebtoken";
 import config from "../config.js";
 import { join } from "path";
 import { stat } from "fs/promises";
@@ -87,17 +92,48 @@ const login = async (req, res) => {
       });
     }
 
+    const refreshToken = createRefreshToken(userFound);
     const token = createAccesToken(userFound);
 
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // Expira en 7 días
+    });
     return res.status(200).json({
       token,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       status: "error",
-      message: "Erro en el inicio de sesión",
+      message: "Error en el inicio de sesión",
     });
   }
+};
+
+const refresh = (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return res.status(403).json({ message: "Invalid refresh token" });
+  }
+
+  jwt.verify(refreshToken, process.env.REFRESH_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({
+        status: "error",
+        message: "Expired token",
+      });
+    }
+
+    const newAccessToken = createNewAccesToken(user);
+    return res.json({
+      status: "success",
+      token: newAccessToken,
+    });
+  });
 };
 
 const update = async (req, res) => {
@@ -251,6 +287,7 @@ const profile = async (req, res) => {
       myFollowings,
     });
   } catch (error) {
+    console.log(error);
     return res.status(404).json({
       status: "error",
       message: "Usuario no encontrado",
@@ -363,7 +400,7 @@ const avatar = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  res.clearCookie("access_token");
+  res.clearCookie("refreshToken");
 
   return res.status(200).json({
     status: "success",
@@ -374,6 +411,7 @@ const logout = async (req, res) => {
 export default {
   register,
   login,
+  refresh,
   update,
   upload,
   profile,
